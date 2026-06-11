@@ -575,57 +575,49 @@ const SEARCH_TERMS = [
 ];
 
 async function fetchSongs() {
-  // Shuffle and pick a few search terms to get variety each game
-  const terms = shuffle(SEARCH_TERMS).slice(0, 8);
-  let allResults = [];
+  const terms = shuffle(SEARCH_TERMS).slice(0, 6);
 
-  $('loadingText').textContent = '正在从 iTunes 加载歌曲...';
-
-  for (let i = 0; i < terms.length; i++) {
+  // Fetch all artists in parallel for speed
+  $('loadingText').textContent = '正在加载歌曲库...';
+  const fetches = terms.map(async (term, i) => {
     try {
-      $('loadingText').textContent = `正在加载歌曲 (${i + 1}/${terms.length})...`;
       const resp = await fetch(
-        `https://itunes.apple.com/search?term=${encodeURIComponent(terms[i])}&limit=10&media=music&country=cn`
+        `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&limit=15&media=music&country=cn`
       );
-      if (!resp.ok) continue;
+      if (!resp.ok) return [];
       const data = await resp.json();
-      if (data.results) {
-        const valid = data.results
-          .filter(r => r.previewUrl && r.trackName && r.artistName && r.trackName.length > 1)
-          .map(r => ({
-            name: r.trackName,
-            artist: r.artistName,
-            preview: r.previewUrl,
-            art: r.artworkUrl100 ? r.artworkUrl100.replace('100x100', '300x300') : ''
-          }));
-        allResults = allResults.concat(valid);
-      }
+      return (data.results || [])
+        .filter(r => r.previewUrl && r.trackName && r.artistName)
+        .map(r => ({
+          name: r.trackName,
+          artist: r.artistName,
+          preview: r.previewUrl,
+          art: r.artworkUrl100 ? r.artworkUrl100.replace('100x100', '300x300') : ''
+        }));
     } catch (e) {
-      console.warn(`Search failed for ${terms[i]}:`, e.message);
+      return [];
     }
-  }
+  });
 
+  const results = await Promise.all(fetches);
+  let allResults = results.flat();
+
+  // Fallback if not enough songs
   if (allResults.length < 4) {
-    // Final fallback - try a broader search
     try {
-      const resp = await fetch('https://itunes.apple.com/search?term=pop+chinese&limit=25&media=music&country=cn');
+      const resp = await fetch('https://itunes.apple.com/search?term=chinese+pop+hits&limit=30&media=music&country=cn');
       const data = await resp.json();
-      if (data.results) {
-        const valid = data.results
-          .filter(r => r.previewUrl && r.trackName)
-          .map(r => ({
-            name: r.trackName,
-            artist: r.artistName || '未知歌手',
-            preview: r.previewUrl,
-            art: r.artworkUrl100 ? r.artworkUrl100.replace('100x100', '300x300') : ''
-          }));
-        allResults = allResults.concat(valid);
-      }
+      allResults = allResults.concat((data.results || []).filter(r => r.previewUrl && r.trackName).map(r => ({
+        name: r.trackName,
+        artist: r.artistName || '未知歌手',
+        preview: r.previewUrl,
+        art: r.artworkUrl100 ? r.artworkUrl100.replace('100x100', '300x300') : ''
+      })));
     } catch (e) {}
   }
 
   if (allResults.length < 4) {
-    throw new Error('歌曲加载失败，请检查网络连接后刷新页面重试');
+    throw new Error('歌曲加载失败，请检查网络连接后刷新重试');
   }
 
   // Deduplicate
@@ -637,7 +629,8 @@ async function fetchSongs() {
     return true;
   });
 
-  $('loadingText').textContent = `已加载 ${songs.length} 首歌曲`;
+  $('loadingText').textContent = `已加载 ${songs.length} 首歌曲 ✓`;
+  await new Promise(r => setTimeout(r, 400)); // brief pause so user sees completion
   return songs;
 }
 
@@ -659,16 +652,18 @@ function pickSongsForRound(correct, pool, count) {
   return options;
 }
 
+let loadTimeoutId = null;
+
 function stopAudio() {
+  if (loadTimeoutId) { clearTimeout(loadTimeoutId); loadTimeoutId = null; }
   if (audio) {
     audio.pause();
-    audio.currentTime = 0;
+    audio.src = '';
+    audio.load();
     audio = null;
   }
-  if (timerId) { clearInterval(timerId); timerId = null; }
   if (listenTimerId) { clearTimeout(listenTimerId); listenTimerId = null; }
   isPlaying = false;
-  listenedTime = 0;
 }
 
 function updateEq(bars) {
@@ -715,6 +710,7 @@ function nextRound() {
   answered = false;
   roundTimeLeft = MAX_TIME;
   listenedTime = 0;
+  if (timerId) { clearInterval(timerId); timerId = null; }
 
   if (currentRound > TOTAL_ROUNDS) {
     endGame();
@@ -730,14 +726,10 @@ function nextRound() {
 
   // Update UI
   $('roundBadge').textContent = `第 ${currentRound}/${TOTAL_ROUNDS} 轮`;
-  $('playHint').textContent = '点击播放按钮试听歌曲片段';
   $('timerText').textContent = `可试听 ${LISTEN_SECONDS}s · 倒计时 ${MAX_TIME}s`;
   $('timerFill').style.width = '100%';
   $('timerFill').className = 'timer-fill';
-  $('btnPlay').textContent = '▶';
-  $('btnPlay').classList.remove('playing');
-  $('playerCard').classList.remove('playing');
-  $('albumArt').classList.remove('playing');
+  updatePlayButton();
   $('nextArea').innerHTML = '';
 
   // Album art
@@ -799,11 +791,7 @@ function togglePlay() {
 
   if (isPlaying) {
     stopAudio();
-    $('btnPlay').textContent = '▶';
-    $('btnPlay').classList.remove('playing');
-    $('playerCard').classList.remove('playing');
-    $('albumArt').classList.remove('playing');
-    updateEq($('equalizer').querySelectorAll('.eq-bar'));
+    updatePlayButton();
     return;
   }
 
@@ -812,74 +800,103 @@ function togglePlay() {
     return;
   }
 
-  // Start playing
-  audio = new Audio(currentSong.preview);
+  // Create audio and set up loading
+  $('playHint').textContent = '⏳ 加载音频中...';
+  $('btnPlay').textContent = '⏳';
+  $('btnPlay').style.pointerEvents = 'none';
+
+  audio = new Audio();
   audio.preload = 'auto';
-  const startPos = Math.random() * 15; // random start point within 30s preview
-  audio.currentTime = startPos;
+  audio.crossOrigin = 'anonymous';
 
-  // Handle load errors
-  audio.onerror = () => {
+  // Wait until we can seek
+  audio.addEventListener('loadedmetadata', () => {
+    const startPos = 5 + Math.random() * 18; // random start between 5-23s within 30s preview
+    audio.currentTime = startPos;
+  }, { once: true });
+
+  audio.addEventListener('canplay', () => {
+    $('btnPlay').style.pointerEvents = 'auto';
+    audio.play().then(() => {
+      // Playback started
+      isPlaying = true;
+      $('btnPlay').textContent = '⏸';
+      $('btnPlay').classList.add('playing');
+      $('playerCard').classList.add('playing');
+      $('albumArt').classList.add('playing');
+      $('playHint').textContent = '🎵 正在播放...';
+      updateEq($('equalizer').querySelectorAll('.eq-bar'));
+      startListenTimer();
+    }).catch(e => {
+      stopAudio();
+      updatePlayButton();
+      showToast('播放失败，请重试');
+      console.error('Play failed:', e.message);
+    });
+  }, { once: true });
+
+  audio.addEventListener('error', () => {
     stopAudio();
-    showToast('音频加载失败，请重试或跳过此题');
-    $('btnPlay').textContent = '▶';
-    $('btnPlay').classList.remove('playing');
-    $('playerCard').classList.remove('playing');
-    $('albumArt').classList.remove('playing');
-    updateEq($('equalizer').querySelectorAll('.eq-bar'));
-  };
+    updatePlayButton();
+    showToast('音频加载失败，请跳过此题');
+    console.error('Audio load error for:', currentSong.preview);
+  }, { once: true });
 
-  audio.play().then(() => {
-    // playback started successfully
-  }).catch(e => {
-    stopAudio();
-    showToast('播放被阻止，请点击播放按钮后再试');
-    $('btnPlay').textContent = '▶';
-    $('btnPlay').classList.remove('playing');
-    $('playerCard').classList.remove('playing');
-    $('albumArt').classList.remove('playing');
-    updateEq($('equalizer').querySelectorAll('.eq-bar'));
-    console.error('Audio play failed:', e.message);
-    return;
-  });
+  // Start loading
+  audio.src = currentSong.preview;
+  audio.load();
 
-  isPlaying = true;
-  $('btnPlay').textContent = '⏸';
-  $('btnPlay').classList.add('playing');
-  $('playerCard').classList.add('playing');
-  $('albumArt').classList.add('playing');
-  $('playHint').textContent = '正在播放...';
+  // Timeout: if audio doesn't load within 8 seconds, give up
+  loadTimeoutId = setTimeout(() => {
+    if (!isPlaying && audio && audio.readyState < 3) {
+      stopAudio();
+      updatePlayButton();
+      showToast('音频加载超时，请跳过此题');
+    }
+  }, 8000);
+
+  // Clean up timeout when audio loads or errors
+  audio.addEventListener('canplay', () => { clearTimeout(loadTimeoutId); loadTimeoutId = null; }, { once: true });
+  audio.addEventListener('error', () => { clearTimeout(loadTimeoutId); loadTimeoutId = null; }, { once: true });
+}
+
+function updatePlayButton() {
+  $('btnPlay').textContent = '▶';
+  $('btnPlay').classList.remove('playing');
+  $('btnPlay').style.pointerEvents = 'auto';
+  $('playerCard').classList.remove('playing');
+  $('albumArt').classList.remove('playing');
   updateEq($('equalizer').querySelectorAll('.eq-bar'));
+  if (listenedTime >= LISTEN_SECONDS) {
+    $('playHint').textContent = '试听结束，请作答！';
+  } else {
+    $('playHint').textContent = '点击播放按钮试听歌曲片段';
+  }
+}
 
-  // Track listen time
-  const startTime = Date.now();
+function startListenTimer() {
+  const startTime = Date.now() - listenedTime * 1000;
   if (listenTimerId) clearTimeout(listenTimerId);
 
-  function trackListen() {
+  function track() {
     if (!isPlaying) return;
     listenedTime = (Date.now() - startTime) / 1000;
     if (listenedTime >= LISTEN_SECONDS) {
       stopAudio();
-      $('btnPlay').textContent = '▶';
-      $('btnPlay').classList.remove('playing');
-      $('playerCard').classList.remove('playing');
-      $('albumArt').classList.remove('playing');
+      updatePlayButton();
       $('playHint').textContent = '试听结束，请作答！';
-      updateEq($('equalizer').querySelectorAll('.eq-bar'));
       return;
     }
-    listenTimerId = setTimeout(trackListen, 200);
+    listenTimerId = setTimeout(track, 300);
   }
-  trackListen();
+  track();
 }
 
 function selectAnswer(selected, btn) {
   if (answered) return;
   answered = true;
   stopAudio();
-  $('playerCard').classList.remove('playing');
-  $('albumArt').classList.remove('playing');
-  updateEq($('equalizer').querySelectorAll('.eq-bar'));
+  updatePlayButton();
 
   const isCorrect = selected.name === currentSong.name;
   const allBtns = $('optionsGrid').querySelectorAll('.option-btn');
@@ -922,9 +939,7 @@ function timeUp() {
   if (answered) return;
   answered = true;
   stopAudio();
-  $('playerCard').classList.remove('playing');
-  $('albumArt').classList.remove('playing');
-  updateEq($('equalizer').querySelectorAll('.eq-bar'));
+  updatePlayButton();
 
   const allBtns = $('optionsGrid').querySelectorAll('.option-btn');
   allBtns.forEach(b => b.disabled = true);
