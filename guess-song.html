@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>🎵 猜歌名 - 音乐小游戏</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #14141f;
+    --surface2: #1c1c2e;
+    --primary: #7c3aed;
+    --primary-glow: #a78bfa;
+    --correct: #22c55e;
+    --wrong: #ef4444;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --gold: #f59e0b;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Subtle animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(124,58,237,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(245,158,11,0.05) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 80%, rgba(34,197,94,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+    animation: bgShift 12s ease-in-out infinite;
+  }
+  @keyframes bgShift {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 480px;
+    padding: 20px;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeUp 0.4s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== START SCREEN ===== */
+  .start-screen {
+    text-align: center;
+  }
+  .logo {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 24px;
+    background: linear-gradient(135deg, var(--primary), #a855f7);
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    box-shadow: 0 0 60px rgba(124,58,237,0.3), 0 0 120px rgba(124,58,237,0.1);
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .start-screen h1 {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #e2e8f0 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .start-screen .subtitle {
+    font-size: 15px;
+    color: var(--text2);
+    margin-bottom: 40px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 40px;
+    border-radius: 100px;
+    font-size: 18px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    letter-spacing: -0.2px;
+    outline: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    color: #fff;
+    box-shadow: 0 4px 24px rgba(124,58,237,0.4);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(124,58,237,0.5);
+  }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .btn-secondary:hover {
+    background: #242438;
+  }
+
+  /* ===== GAME SCREEN ===== */
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+  .round-badge {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    background: var(--surface);
+    padding: 6px 14px;
+    border-radius: 100px;
+  }
+  .score-display {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .score-display span {
+    font-size: 13px;
+    color: var(--text2);
+    font-weight: 500;
+  }
+
+  /* Player area */
+  .player-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 32px 24px;
+    text-align: center;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255,255,255,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+  .player-card.playing {
+    border-color: rgba(124,58,237,0.3);
+    box-shadow: 0 0 40px rgba(124,58,237,0.1);
+  }
+  .album-art {
+    width: 120px;
+    height: 120px;
+    border-radius: 20px;
+    margin: 0 auto 20px;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 56px;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  .album-art.playing {
+    animation: pulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 40px rgba(124,58,237,0.3);
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
+  .album-art img {
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    object-fit: cover;
+    display: none;
+  }
+  .album-art img.loaded { display: block; }
+
+  /* Equalizer */
+  .equalizer {
+    display: flex;
+    gap: 3px;
+    align-items: flex-end;
+    justify-content: center;
+    height: 32px;
+    margin-bottom: 16px;
+  }
+  .eq-bar {
+    width: 4px;
+    background: var(--primary);
+    border-radius: 2px;
+    transition: height 0.15s ease;
+  }
+  .eq-bar.active {
+    animation: eqAnim 0.6s ease-in-out infinite;
+  }
+  .eq-bar:nth-child(1).active { animation-delay: 0s; }
+  .eq-bar:nth-child(2).active { animation-delay: 0.1s; }
+  .eq-bar:nth-child(3).active { animation-delay: 0.2s; }
+  .eq-bar:nth-child(4).active { animation-delay: 0.15s; }
+  .eq-bar:nth-child(5).active { animation-delay: 0.05s; }
+  .eq-bar:nth-child(6).active { animation-delay: 0.25s; }
+  .eq-bar:nth-child(7).active { animation-delay: 0.1s; }
+  .eq-bar:nth-child(8).active { animation-delay: 0.2s; }
+  @keyframes eqAnim {
+    0%, 100% { height: 4px; }
+    50% { height: 28px; }
+  }
+
+  .play-hint {
+    font-size: 14px;
+    color: var(--text2);
+    margin-bottom: 16px;
+  }
+  .btn-play {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: none;
+    cursor: pointer;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    box-shadow: 0 4px 24px rgba(124,58,237,0.4);
+    transition: all 0.25s ease;
+    color: #fff;
+    outline: none;
+  }
+  .btn-play:hover { transform: scale(1.08); }
+  .btn-play:active { transform: scale(0.94); }
+  .btn-play.playing {
+    background: var(--wrong);
+    box-shadow: 0 4px 24px rgba(239,68,68,0.4);
+  }
+
+  /* Timer */
+  .timer-bar {
+    height: 3px;
+    background: var(--surface2);
+    border-radius: 2px;
+    margin-top: 20px;
+    overflow: hidden;
+  }
+  .timer-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 2px;
+    transition: width 0.1s linear;
+    width: 100%;
+  }
+  .timer-fill.warning { background: var(--gold); }
+  .timer-fill.danger { background: var(--wrong); }
+  .timer-text {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 6px;
+    text-align: right;
+  }
+
+  /* Options */
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .option-btn {
+    background: var(--surface);
+    border: 2px solid rgba(255,255,255,0.04);
+    border-radius: var(--radius-sm);
+    padding: 18px 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    letter-spacing: -0.1px;
+    outline: none;
+    word-break: break-word;
+  }
+  .option-btn:hover {
+    border-color: rgba(124,58,237,0.4);
+    background: var(--surface2);
+    transform: translateY(-1px);
+  }
+  .option-btn:active { transform: scale(0.97); }
+  .option-btn.correct {
+    border-color: var(--correct);
+    background: rgba(34,197,94,0.1);
+    color: var(--correct);
+    animation: popCorrect 0.4s ease;
+  }
+  .option-btn.wrong {
+    border-color: var(--wrong);
+    background: rgba(239,68,68,0.1);
+    color: var(--wrong);
+    animation: shake 0.4s ease;
+  }
+  .option-btn:disabled { pointer-events: none; opacity: 0.6; }
+  .option-btn.reveal-correct {
+    border-color: var(--correct);
+    opacity: 1 !important;
+  }
+  @keyframes popCorrect {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  /* Next round button */
+  .next-area {
+    text-align: center;
+    margin-top: 16px;
+    min-height: 52px;
+  }
+
+  /* ===== RESULT SCREEN ===== */
+  .result-screen { text-align: center; }
+  .result-icon {
+    font-size: 72px;
+    margin-bottom: 16px;
+  }
+  .result-screen h2 {
+    font-size: 30px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .result-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin: 32px 0;
+  }
+  .stat-card {
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: 20px 12px;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--gold), #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+  .result-rank {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+    margin: 16px 0;
+  }
+  .result-screen .btn {
+    margin: 8px;
+  }
+
+  /* ===== LOADING ===== */
+  .loading-screen { text-align: center; }
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--surface2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-screen p {
+    color: var(--text2);
+    font-size: 14px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-120px);
+    background: var(--surface2);
+    color: var(--text);
+    padding: 12px 24px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 100;
+    transition: transform 0.3s ease;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Responsive */
+  @media (max-width: 400px) {
+    .options-grid { grid-template-columns: 1fr; }
+    .start-screen h1 { font-size: 28px; }
+    .album-art { width: 90px; height: 90px; border-radius: 16px; }
+    .album-art img { border-radius: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="container">
+
+  <!-- START SCREEN -->
+  <div class="screen active" id="startScreen">
+    <div class="start-screen">
+      <div class="logo">🎵</div>
+      <h1>猜歌名</h1>
+      <p class="subtitle">听听看，你能猜出几首歌？</p>
+      <button class="btn btn-primary" onclick="startGame()">
+        🎮 开始游戏
+      </button>
+    </div>
+  </div>
+
+  <!-- LOADING SCREEN -->
+  <div class="screen" id="loadingScreen">
+    <div class="loading-screen">
+      <div class="spinner"></div>
+      <p id="loadingText">正在加载歌曲...</p>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="gameScreen">
+    <div class="game-header">
+      <span class="round-badge" id="roundBadge">第 1/10 轮</span>
+      <span class="score-display" id="scoreDisplay"><span>⭐</span> 0</span>
+    </div>
+    <div class="player-card" id="playerCard">
+      <div class="album-art" id="albumArt">🎧</div>
+      <div class="equalizer" id="equalizer">
+        <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+        <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+        <div class="eq-bar"></div><div class="eq-bar"></div>
+      </div>
+      <p class="play-hint" id="playHint">点击播放按钮试听歌曲片段</p>
+      <button class="btn-play" id="btnPlay" onclick="togglePlay()">▶</button>
+      <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+      <p class="timer-text" id="timerText">已播放 0s / 可听 8s</p>
+    </div>
+    <div class="options-grid" id="optionsGrid"></div>
+    <div class="next-area" id="nextArea"></div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="screen" id="resultScreen">
+    <div class="result-screen">
+      <div class="result-icon" id="resultIcon">🏆</div>
+      <h2 id="resultTitle">太棒了！</h2>
+      <p style="color:var(--text2);font-size:15px;" id="resultSubtitle"></p>
+      <div class="result-stats">
+        <div class="stat-card">
+          <div class="stat-value" id="finalScore">0</div>
+          <div class="stat-label">总分</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="finalCorrect">0</div>
+          <div class="stat-label">正确</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="finalMax">0</div>
+          <div class="stat-label">单轮最高</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="startGame()">🔄 再来一局</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==================== GAME STATE ====================
+const TOTAL_ROUNDS = 10;
+const LISTEN_SECONDS = 8;
+const MAX_TIME = 15; // seconds per round
+const TIMER_INTERVAL = 100; // ms
+
+let songs = [];
+let currentRound = 0;
+let score = 0;
+let correctCount = 0;
+let maxRoundScore = 0;
+let currentSong = null;
+let audio = null;
+let timerId = null;
+let listenTimerId = null;
+let listenedTime = 0;
+let roundTimeLeft = MAX_TIME;
+let answered = false;
+let isPlaying = false;
+
+// ==================== DOM REFS ====================
+const $ = id => document.getElementById(id);
+const startScreen = $('startScreen');
+const loadingScreen = $('loadingScreen');
+const gameScreen = $('gameScreen');
+const resultScreen = $('resultScreen');
+const toast = $('toast');
+
+// ==================== TOAST ====================
+let toastTimeout;
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ==================== SCREEN SWITCHER ====================
+function showScreen(screen) {
+  [startScreen, loadingScreen, gameScreen, resultScreen].forEach(s => s.classList.remove('active'));
+  screen.classList.add('active');
+}
+
+// ==================== FETCH SONGS ====================
+async function fetchSongs() {
+  const fallbackSongs = [
+    // Pre-curated Chinese hits with iTunes preview URLs
+    { name:'七里香', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/8e/3c/fb/8e3cfb9a-5b5c-2a7a-f1e8-6902a3425d3e/mzaf_4620256826872841725.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/f8/24/43/f82443f1-af93-4c5f-d594-89f548a1f1f3/source/100x100bb.jpg' },
+    { name:'稻香', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/7c/fc/e6/7cfce663-a12e-7b39-7bc2-13239ee25e1f/mzaf_16905573447504436013.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/47/cf/33/47cf33cf-7546-73f5-0efc-3c9e5d4d3cef/source/100x100bb.jpg' },
+    { name:'青花瓷', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/2e/d6/3d/2ed63d09-5c8a-0fa3-0c3c-bd0bf8a64325/mzaf_7648384903499850808.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/82/49/b5/8249b53a-e64b-a5f5-8fe9-740a8e95a2bd/source/100x100bb.jpg' },
+    { name:'晴天', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/2e/d6/3d/2ed63d09-5c8a-0fa3-0c3c-bd0bf8a64325/mzaf_7648384903499850808.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/82/49/b5/8249b53a-e64b-a5f5-8fe9-740a8e95a2bd/source/100x100bb.jpg' },
+    { name:'夜曲', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/c2/7b/4c/c27b4c09-b4a3-4d17-29dd-7d5e16d8e7c1/mzaf_15672764931698911419.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/f8/24/43/f82443f1-af93-4c5f-d594-89f548a1f1f3/source/100x100bb.jpg' },
+    { name:'简单爱', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/9b/3f/29/9b3f29cd-8d37-8c3b-7b4a-36e93c8c1a47/mzaf_17769131986044660665.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/4e/d5/19/4ed5198e-a9e3-6ce4-99ce-98acb5c8c7c1/source/100x100bb.jpg' },
+    { name:'修炼爱情', artist:'林俊杰', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/e0/b3/51/e0b35105-a7b3-8aed-2c85-b4c5719a2fba/mzaf_15825815143075323779.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/1d/a1/c2/1da1c2d4-e7c8-2f7b-1ee3-1c07d5a1c6c0/source/100x100bb.jpg' },
+    { name:'一千年以后', artist:'林俊杰', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/01/0e/9e/010e9e77-5924-5c4a-cce0-b7880d9a0fb0/mzaf_14707075346782830149.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/c4/23/c6/c423c6b8-6c0c-4ab3-bc4e-e5bf4cb4f5da/source/100x100bb.jpg' },
+    { name:'泡沫', artist:'邓紫棋', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/e8/1f/2a/e81f2a2b-7aeb-3a21-f2e3-8ebc7e4f1eb2/mzaf_891252381357182936.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/b7/ed/a0/b7eda0ec-bd45-1b0e-0d18-6f77e0cd0d20/source/100x100bb.jpg' },
+    { name:'光年之外', artist:'邓紫棋', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/93/c6/ad/93c6adc4-66a8-c5b7-3e3b-4a529bd7e31e/mzaf_1685300306384595239.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/0f/c5/9a/0fc59a7c-6ffe-583f-7b1c-7e7d22f3a5c5/source/100x100bb.jpg' },
+    { name:'十年', artist:'陈奕迅', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/99/6c/5a/996c5a97-4c95-26b5-5d9f-3d6b0a5a5b7e/mzaf_5962631720154698056.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/1a/67/60/1a676093-f481-8abf-bbfa-ccadfa8488b7/source/100x100bb.jpg' },
+    { name:'爱情转移', artist:'陈奕迅', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/a9/0c/98/a90c98b2-5a59-7259-37ad-4c6d13c76d1b/mzaf_1008954678218730816.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/53/5d/b9/535db9e8-74b2-7a4c-87e3-767b5888af62/source/100x100bb.jpg' },
+    { name:'演员', artist:'薛之谦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/7b/c7/c3/7bc7c3d9-2cb4-791e-2a9b-4d62b2b5a2e6/mzaf_7653111633331717758.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/11/ef/5c/11ef5c91-1670-fb15-3aa8-6eef109a7a2c/source/100x100bb.jpg' },
+    { name:'起风了', artist:'买辣椒也用券', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/13/5e/1f/135e1fc9-3540-5e4f-4ae8-6aa60d4c4a86/mzaf_7383496347086444175.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/52/aa/25/52aa252d-62b2-d773-7da7-4c1d9eb2c34e/source/100x100bb.jpg' },
+    { name:'小幸运', artist:'田馥甄', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/43/b6/0c/43b60c2e-6ff9-a6f9-fbe6-271e1c13e6e3/mzaf_5357206725616999517.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/9f/1e/ee/9f1eeeaf-acae-7bd4-e0c8-1891926e39c3/source/100x100bb.jpg' },
+    { name:'后来', artist:'刘若英', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/27/52/e6/2752e6f6-03af-2a6c-f9a0-9234e0e47ef0/mzaf_2857737809925687451.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/1e/88/9e/1e889ea7-3eeb-ef9f-0efb-7fc955a1d889/source/100x100bb.jpg' },
+    { name:'追光者', artist:'岑宁儿', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/c6/2c/31/c62c312a-b8e6-8f69-3e02-4a82e0de2b8a/mzaf_3550528598502924437.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/0e/a9/21/0ea9214a-ce44-33ce-2a84-3b75ae9c8b38/source/100x100bb.jpg' },
+    { name:'平凡之路', artist:'朴树', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/01/90/3c/01903cfb-2c9e-8f40-e436-4c85985d895e/mzaf_8778453630123998591.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/b1/12/1a/b1121aac-ea2b-40b2-2c98-b28b3c9e4c9c/source/100x100bb.jpg' },
+    { name:'告白气球', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/82/0e/3b/820e3b48-d2f4-0d6f-b4a5-5c7f1d3d3c7e/mzaf_6887018120400535171.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/fe/5d/af/fe5dafe8-e9f2-52b6-71ff-b3bcce52ed50/source/100x100bb.jpg' },
+    { name:'那些年', artist:'胡夏', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/83/e6/bb/83e6bb9a-e6ac-26d0-ea85-7cd24cbb3eff/mzaf_6572017955668975939.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/6f/34/09/6f3409f0-22a8-03a1-2a8e-c7f7a7b7a3c4/source/100x100bb.jpg' },
+    { name:'大鱼', artist:'周深', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/b9/91/a0/b991a0d6-0cfa-0b50-a477-87b0a6c3c2ad/mzaf_8710827884957395734.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/3e/39/b5/3e39b512-79a1-9d97-608e-62dcaa926e07/source/100x100bb.jpg' },
+    { name:'年少有为', artist:'李荣浩', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/22/06/5c/22065c56-5c36-10fc-12e2-6b40580f0b09/mzaf_2467244291209431300.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/6d/7c/6f/6d7c6f9e-d7e2-2ae0-10f2-42f1e0c3a382/source/100x100bb.jpg' },
+    { name:'体面', artist:'于文文', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/21/8f/3f/218f3f59-4b89-5312-562e-90a52c8a69ad/mzaf_2947160627067092756.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/a4/e7/01/a4e701ab-e351-9c38-9c44-13a7ad35e275/source/100x100bb.jpg' },
+    { name:'南山南', artist:'马頔', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/78/7a/5e/787a5e44-d3f6-59b6-23f8-37c501abe9b4/mzaf_2586724670445616364.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/a3/73/c7/a373c729-ffc9-8f21-8a24-f0ccf0d74a73/source/100x100bb.jpg' },
+    { name:'遇见', artist:'孙燕姿', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/1c/f9/aa/1cf9aa4c-1f4a-0e98-10bd-501a13e226a7/mzaf_5476605677734144679.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/33/1f/2b/331f2b35-26eb-a212-ced5-5545af414799/source/100x100bb.jpg' },
+    { name:'勇气', artist:'梁静茹', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/88/06/3c/88063c2d-ba81-1e7f-02e7-06d0e8c8c2d9/mzaf_16888069751689740502.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/5d/f9/f0/5df9f0ea-e00a-40be-ff0c-35aba9e5c1a5/source/100x100bb.jpg' },
+    { name:'隐形的翅膀', artist:'张韶涵', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/9c/d5/88/9cd58811-d15a-2c1e-96e7-6c30ef7e9071/mzaf_18376300570381056938.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/43/7f/7a/437f7a9f-db15-56e3-04c4-57a16e1dee87/source/100x100bb.jpg' },
+    { name:'成都', artist:'赵雷', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/9f/80/3e/9f803e4b-478a-2aa7-0f89-1f4e275a0c27/mzaf_15965131851015758916.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/cd/8a/50/cd8a50a7-d834-7e3a-8cb6-9c8e0a6f3e8a/source/100x100bb.jpg' },
+    { name:'童话', artist:'光良', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/79/45/4e/79454eab-18e3-5fba-c052-a52e19d7c1d4/mzaf_5759691780705636519.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/2a/20/4e/2a204eef-60ce-2a88-7a4e-bcd9c007cbc5/source/100x100bb.jpg' },
+    { name:'最美的期待', artist:'周笔畅', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/f0/2d/92/f02d92b6-5360-7116-6cb6-ff38fef73a0a/mzaf_17154821643892203115.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/a1/f0/8d/a1f08d85-74a8-244e-4e80-1f0dd9ab8e63/source/100x100bb.jpg' },
+    { name:'夜空中最亮的星', artist:'逃跑计划', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/13/44/e0/1344e084-4ce8-c29a-66a0-e10bca3c1a8b/mzaf_6905102348113689452.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/c3/9e/72/c39e7204-dfef-2b97-8a0f-8c5a017bd128/source/100x100bb.jpg' },
+  ];
+
+  // Try to fetch additional songs from iTunes API
+  const artists = ['周杰伦','林俊杰','邓紫棋','陈奕迅','薛之谦','李荣浩'];
+  const artist = artists[Math.floor(Math.random() * artists.length)];
+
+  try {
+    const resp = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&limit=15&media=music&country=cn`);
+    const data = await resp.json();
+    if (data.results && data.results.length > 0) {
+      const apiSongs = data.results
+        .filter(r => r.previewUrl && r.trackName && r.artistName)
+        .map(r => ({
+          name: r.trackName,
+          artist: r.artistName,
+          preview: r.previewUrl,
+          art: r.artworkUrl100 || ''
+        }));
+      songs = [...fallbackSongs, ...apiSongs];
+    } else {
+      songs = fallbackSongs;
+    }
+  } catch (e) {
+    console.log('iTunes API failed, using fallback songs');
+    songs = fallbackSongs;
+  }
+
+  // Deduplicate by name
+  const seen = new Set();
+  songs = songs.filter(s => {
+    const key = s.name + s.artist;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return songs;
+}
+
+// ==================== GAME LOGIC ====================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickSongsForRound(correct, pool, count) {
+  const others = pool.filter(s => s.name !== correct.name);
+  const shuffled = shuffle(others);
+  const distractors = shuffled.slice(0, count - 1);
+  const options = shuffle([correct, ...distractors]);
+  return options;
+}
+
+function stopAudio() {
+  if (audio) {
+    audio.pause();
+    audio.currentTime = 0;
+    audio = null;
+  }
+  if (timerId) { clearInterval(timerId); timerId = null; }
+  if (listenTimerId) { clearTimeout(listenTimerId); listenTimerId = null; }
+  isPlaying = false;
+  listenedTime = 0;
+}
+
+function updateEq(bars) {
+  bars.forEach(b => b.classList.remove('active'));
+  if (isPlaying) {
+    bars.forEach(b => b.classList.add('active'));
+  }
+}
+
+async function startGame() {
+  stopAudio();
+  showScreen(loadingScreen);
+
+  if (songs.length < 4) {
+    await fetchSongs();
+  }
+
+  if (songs.length < 4) {
+    showToast('歌曲加载失败，请刷新重试');
+    showScreen(startScreen);
+    return;
+  }
+
+  currentRound = 0;
+  score = 0;
+  correctCount = 0;
+  maxRoundScore = 0;
+
+  showScreen(gameScreen);
+  $('scoreDisplay').innerHTML = '<span>⭐</span> 0';
+  nextRound();
+}
+
+function nextRound() {
+  stopAudio();
+  currentRound++;
+  answered = false;
+  roundTimeLeft = MAX_TIME;
+  listenedTime = 0;
+
+  if (currentRound > TOTAL_ROUNDS) {
+    endGame();
+    return;
+  }
+
+  // Pick a random song
+  const available = shuffle(songs);
+  currentSong = available[0];
+
+  // Generate options
+  const options = pickSongsForRound(currentSong, songs, 4);
+
+  // Update UI
+  $('roundBadge').textContent = `第 ${currentRound}/${TOTAL_ROUNDS} 轮`;
+  $('playHint').textContent = '点击播放按钮试听歌曲片段';
+  $('timerText').textContent = `可试听 ${LISTEN_SECONDS}s · 倒计时 ${MAX_TIME}s`;
+  $('timerFill').style.width = '100%';
+  $('timerFill').className = 'timer-fill';
+  $('btnPlay').textContent = '▶';
+  $('btnPlay').classList.remove('playing');
+  $('playerCard').classList.remove('playing');
+  $('albumArt').classList.remove('playing');
+  $('nextArea').innerHTML = '';
+
+  // Album art
+  const art = $('albumArt');
+  art.innerHTML = '🎧';
+  art.querySelector('img')?.remove();
+  if (currentSong.art) {
+    const img = document.createElement('img');
+    img.src = currentSong.art;
+    img.onload = () => { art.innerHTML = ''; art.appendChild(img); img.classList.add('loaded'); };
+    img.onerror = () => {}; // keep emoji fallback
+  }
+
+  // Equalizer
+  const eqBars = $('equalizer').querySelectorAll('.eq-bar');
+  eqBars.forEach(b => b.classList.remove('active'));
+
+  // Options
+  const optsGrid = $('optionsGrid');
+  optsGrid.innerHTML = '';
+  options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt.name;
+    btn.onclick = () => selectAnswer(opt, btn);
+    optsGrid.appendChild(btn);
+  });
+
+  // Start timer
+  startTimer();
+}
+
+function startTimer() {
+  if (timerId) clearInterval(timerId);
+  timerId = setInterval(() => {
+    roundTimeLeft -= TIMER_INTERVAL / 1000;
+    const pct = (roundTimeLeft / MAX_TIME) * 100;
+    $('timerFill').style.width = Math.max(0, pct) + '%';
+    $('timerFill').className = 'timer-fill' + (pct < 30 ? ' danger' : pct < 60 ? ' warning' : '');
+
+    if (!answered) {
+      $('timerText').textContent = `已播放 ${Math.floor(listenedTime)}s / 可听 ${LISTEN_SECONDS}s · 倒计时 ${Math.ceil(roundTimeLeft)}s`;
+    }
+
+    if (roundTimeLeft <= 0) {
+      clearInterval(timerId);
+      timerId = null;
+      if (!answered) timeUp();
+    }
+  }, TIMER_INTERVAL);
+}
+
+function togglePlay() {
+  if (answered) return;
+  if (!currentSong?.preview) {
+    showToast('无法加载音频');
+    return;
+  }
+
+  if (isPlaying) {
+    stopAudio();
+    $('btnPlay').textContent = '▶';
+    $('btnPlay').classList.remove('playing');
+    $('playerCard').classList.remove('playing');
+    $('albumArt').classList.remove('playing');
+    updateEq($('equalizer').querySelectorAll('.eq-bar'));
+    return;
+  }
+
+  if (listenedTime >= LISTEN_SECONDS && !answered) {
+    showToast(`已听完 ${LISTEN_SECONDS} 秒，请作答！`);
+    return;
+  }
+
+  // Start playing
+  audio = new Audio(currentSong.preview);
+  audio.currentTime = Math.random() * 15; // random start point within 30s preview
+  audio.play().catch(e => {
+    showToast('播放失败，请重试');
+    console.error(e);
+  });
+
+  isPlaying = true;
+  $('btnPlay').textContent = '⏸';
+  $('btnPlay').classList.add('playing');
+  $('playerCard').classList.add('playing');
+  $('albumArt').classList.add('playing');
+  $('playHint').textContent = '正在播放...';
+  updateEq($('equalizer').querySelectorAll('.eq-bar'));
+
+  // Track listen time
+  const startTime = Date.now();
+  if (listenTimerId) clearTimeout(listenTimerId);
+
+  function trackListen() {
+    if (!isPlaying) return;
+    listenedTime = (Date.now() - startTime) / 1000;
+    if (listenedTime >= LISTEN_SECONDS) {
+      stopAudio();
+      $('btnPlay').textContent = '▶';
+      $('btnPlay').classList.remove('playing');
+      $('playerCard').classList.remove('playing');
+      $('albumArt').classList.remove('playing');
+      $('playHint').textContent = '试听结束，请作答！';
+      updateEq($('equalizer').querySelectorAll('.eq-bar'));
+      return;
+    }
+    listenTimerId = setTimeout(trackListen, 200);
+  }
+  trackListen();
+}
+
+function selectAnswer(selected, btn) {
+  if (answered) return;
+  answered = true;
+  stopAudio();
+  $('playerCard').classList.remove('playing');
+  $('albumArt').classList.remove('playing');
+  updateEq($('equalizer').querySelectorAll('.eq-bar'));
+
+  const isCorrect = selected.name === currentSong.name;
+  const allBtns = $('optionsGrid').querySelectorAll('.option-btn');
+
+  // Disable all buttons
+  allBtns.forEach(b => b.disabled = true);
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    correctCount++;
+
+    // Calculate score
+    const timeBonus = Math.ceil(roundTimeLeft * 3);
+    const roundScore = 10 + timeBonus;
+    score += roundScore;
+    if (roundScore > maxRoundScore) maxRoundScore = roundScore;
+
+    $('playHint').textContent = `✅ 正确！+${roundScore} 分`;
+    $('scoreDisplay').innerHTML = `<span>⭐</span> ${score}`;
+  } else {
+    btn.classList.add('wrong');
+    $('playHint').textContent = '❌ 答错了';
+
+    // Reveal correct answer
+    allBtns.forEach(b => {
+      if (b.textContent === currentSong.name) b.classList.add('reveal-correct');
+    });
+  }
+
+  // Show next button or auto-advance
+  const isLast = currentRound >= TOTAL_ROUNDS;
+  $('nextArea').innerHTML = `
+    <button class="btn btn-primary" style="padding:12px 32px;font-size:15px;" onclick="nextRound()">
+      ${isLast ? '🏆 查看结果' : '→ 下一题'}
+    </button>
+  `;
+}
+
+function timeUp() {
+  if (answered) return;
+  answered = true;
+  stopAudio();
+  $('playerCard').classList.remove('playing');
+  $('albumArt').classList.remove('playing');
+  updateEq($('equalizer').querySelectorAll('.eq-bar'));
+
+  const allBtns = $('optionsGrid').querySelectorAll('.option-btn');
+  allBtns.forEach(b => b.disabled = true);
+
+  // Reveal correct answer
+  allBtns.forEach(b => {
+    if (b.textContent === currentSong.name) b.classList.add('reveal-correct');
+  });
+
+  $('playHint').textContent = '⏰ 时间到！';
+
+  const isLast = currentRound >= TOTAL_ROUNDS;
+  $('nextArea').innerHTML = `
+    <button class="btn btn-primary" style="padding:12px 32px;font-size:15px;" onclick="nextRound()">
+      ${isLast ? '🏆 查看结果' : '→ 下一题'}
+    </button>
+  `;
+}
+
+function endGame() {
+  stopAudio();
+  if (timerId) { clearInterval(timerId); timerId = null; }
+
+  showScreen(resultScreen);
+  $('finalScore').textContent = score;
+  $('finalCorrect').textContent = `${correctCount}/${TOTAL_ROUNDS}`;
+  $('finalMax').textContent = maxRoundScore || 0;
+
+  const rate = correctCount / TOTAL_ROUNDS;
+  let icon, title, sub;
+  if (rate >= 0.9) { icon = '🏆'; title = '歌神在世！'; sub = '几乎全部答对，太厉害了！'; }
+  else if (rate >= 0.7) { icon = '🎉'; title = '音乐达人！'; sub = '很不错的表现！'; }
+  else if (rate >= 0.5) { icon = '👍'; title = '还不错！'; sub = '继续加油哦~'; }
+  else if (rate >= 0.3) { icon = '🤔'; title = '再接再厉'; sub = '多听听歌再来挑战吧！'; }
+  else { icon = '😅'; title = '继续努力'; sub = '音乐世界等着你探索！'; }
+
+  $('resultIcon').textContent = icon;
+  $('resultTitle').textContent = title;
+  $('resultSubtitle').textContent = sub;
+}
+
+// ==================== INIT ====================
+// Pre-fetch songs in background
+fetchSongs().then(s => { console.log(`Loaded ${s.length} songs`); });
+</script>
+</body>
+</html>
