@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>培训流程简介</title>
+<style>
+  :root {
+    --blue: #007AFF;
+    --green: #34C759;
+    --red: #FF3B30;
+    --orange: #FF9500;
+    --label: #1d1d1f;
+    --secondary: #6e6e73;
+    --tertiary: #aeaeb2;
+    --quaternary: #d1d1d6;
+    --bg: #f2f2f7;
+    --card: #ffffff;
+    --separator: rgba(60,60,67,0.08);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+    --shadow: 0 4px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
+    --radius-sm: 10px;
+    --radius: 16px;
+    --radius-lg: 20px;
+    --radius-xl: 24px;
+    --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--label);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ===== TOP BAR ===== */
+  .navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    height: 52px;
+    background: rgba(242,242,247,0.72);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 0.5px solid var(--separator);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+  }
+  .navbar-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--label);
+    letter-spacing: -0.2px;
+  }
+
+  main {
+    padding-top: 52px;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    padding: 60px 24px 48px;
+    text-align: center;
+    background: linear-gradient(180deg, #f2f2f7 0%, #f2f2f7 60%, #e8e8ed 100%);
+  }
+  .hero-badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue);
+    background: rgba(0,122,255,0.1);
+    padding: 4px 12px;
+    border-radius: 100px;
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: -0.8px;
+    color: var(--label);
+    margin-bottom: 8px;
+  }
+  .hero .sub {
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--secondary);
+    margin-bottom: 4px;
+    letter-spacing: -0.2px;
+  }
+  .hero .slogan {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--green);
+    margin-top: 28px;
+  }
+
+  /* ===== SECTION ===== */
+  .section {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 36px 20px;
+  }
+  .section-header {
+    margin-bottom: 18px;
+  }
+  .section-kicker {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .section-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--label);
+    letter-spacing: -0.5px;
+  }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-body {
+    padding: 28px 24px;
+  }
+  .card + .card {
+    margin-top: 16px;
+  }
+
+  /* ===== ROW (iOS-style list rows) ===== */
+  .list-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 0;
+    gap: 14px;
+  }
+  .list-row + .list-row {
+    border-top: 0.5px solid var(--separator);
+  }
+  .list-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+  .list-icon.blue { background: rgba(0,122,255,0.1); }
+  .list-icon.green { background: rgba(52,199,89,0.1); }
+  .list-icon.orange { background: rgba(255,149,0,0.1); }
+  .list-icon.red { background: rgba(255,59,48,0.1); }
+  .list-icon.purple { background: rgba(175,82,222,0.1); }
+  .list-label {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--label);
+    flex: 1;
+    letter-spacing: -0.2px;
+  }
+  .list-value {
+    font-size: 16px;
+    color: var(--secondary);
+    text-align: right;
+    letter-spacing: -0.2px;
+  }
+
+  /* ===== INFO ROWS ===== */
+  .info-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .info-body { flex: 1; min-width: 0; }
+  .info-heading {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+  .info-desc {
+    font-size: 14px;
+    color: var(--secondary);
+    margin-top: 2px;
+    letter-spacing: -0.1px;
+  }
+
+  /* ===== CHIP ===== */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .chip {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 100px;
+    background: rgba(0,122,255,0.08);
+    color: var(--blue);
+    letter-spacing: -0.1px;
+  }
+  .chip.green { background: rgba(52,199,89,0.1); color: #248a3d; }
+
+  /* ===== PROCESS ===== */
+  .process-flow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 16px 0;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .process-step {
+    background: rgba(0,122,255,0.06);
+    color: var(--blue);
+    padding: 6px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+  .process-arrow {
+    color: var(--tertiary);
+    font-size: 11px;
+  }
+
+  /* ===== BADGE PILL ===== */
+  .pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.1px;
+  }
+  .pill.danger { background: rgba(255,59,48,0.08); color: var(--red); }
+  .pill.success { background: rgba(52,199,89,0.08); color: #248a3d; }
+  .pill.warning { background: rgba(255,149,0,0.08); color: #c47a00; }
+
+  /* ===== GRID ===== */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  /* ===== LINK ===== */
+  .link-block {
+    display: block;
+    background: rgba(0,122,255,0.04);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--blue);
+    word-break: break-all;
+    text-decoration: none;
+    font-weight: 500;
+    letter-spacing: -0.1px;
+    transition: background 0.2s var(--ease);
+  }
+  .link-block:hover { background: rgba(0,122,255,0.08); }
+
+  /* ===== IMAGE ===== */
+  .img-capsule {
+    width: 100%;
+    border-radius: var(--radius);
+    display: block;
+    box-shadow: var(--shadow-sm);
+  }
+  .img-gallery {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .img-gallery img {
+    width: 100%;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ===== TOC ===== */
+  .toc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .toc-card {
+    background: var(--card);
+    border-radius: var(--radius-xl);
+    padding: 22px 18px;
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    color: var(--label);
+    transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .toc-card:active {
+    transform: scale(0.97);
+    box-shadow: var(--shadow-sm);
+  }
+  .toc-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+  .toc-num {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--secondary);
+    letter-spacing: 0.5px;
+  }
+  .toc-title {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+  .toc-desc {
+    font-size: 13px;
+    color: var(--secondary);
+    letter-spacing: -0.1px;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    text-align: center;
+    padding: 60px 24px 48px;
+  }
+  .footer .ending {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--label);
+    margin-bottom: 8px;
+  }
+  .footer .slogan {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--green);
+    margin-bottom: 20px;
+  }
+  .footer .copy {
+    font-size: 12px;
+    color: var(--tertiary);
+  }
+
+  /* ===== CALLOUT ===== */
+  .callout {
+    background: rgba(255,149,0,0.06);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-top: 16px;
+    font-size: 14px;
+    color: #7a4f00;
+    letter-spacing: -0.1px;
+  }
+  .callout strong {
+    color: #c47a00;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 480px) {
+    .hero h1 { font-size: 30px; }
+    .hero .slogan { font-size: 22px; }
+    .section-title { font-size: 23px; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .toc-grid { grid-template-columns: 1fr; }
+    .img-gallery { grid-template-columns: 1fr; }
+    .process-flow { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<div class="navbar">
+  <span class="navbar-title">培训流程简介</span>
+</div>
+
+<main>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-badge">转转循环科技有限公司</div>
+  <h1>培训流程简介</h1>
+  <p class="sub">新员工入职培训指引</p>
+  <p class="slogan">Save Money. Save the World.</p>
+</section>
+
+<!-- ===== 目录 ===== -->
+<section class="section">
+  <div class="section-header">
+    <p class="section-kicker">Overview</p>
+    <h2 class="section-title">目录</h2>
+  </div>
+  <div class="toc-grid">
+    <a href="#intro" class="toc-card">
+      <div class="toc-icon blue" style="background:rgba(0,122,255,0.1)">💼</div>
+      <div>
+        <p class="toc-num">01</p>
+        <p class="toc-title">工作介绍</p>
+        <p class="toc-desc">时间 · 制度 · 流程</p>
+      </div>
+    </a>
+    <a href="#arrange" class="toc-card">
+      <div class="toc-icon green" style="background:rgba(52,199,89,0.1)">📅</div>
+      <div>
+        <p class="toc-num">02</p>
+        <p class="toc-title">培训安排</p>
+        <p class="toc-desc">线上 · 实操 · 跑单</p>
+      </div>
+    </a>
+    <a href="#prepare" class="toc-card">
+      <div class="toc-icon orange" style="background:rgba(255,149,0,0.1)">🛠</div>
+      <div>
+        <p class="toc-num">03</p>
+        <p class="toc-title">准备工作</p>
+        <p class="toc-desc">APP · 工具 · 物料</p>
+      </div>
+    </a>
+    <a href="#rules" class="toc-card">
+      <div class="toc-icon purple" style="background:rgba(175,82,222,0.1)">📋</div>
+      <div>
+        <p class="toc-num">04</p>
+        <p class="toc-title">班级公约</p>
+        <p class="toc-desc">课前 · 课中 · 课后</p>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- ===== 工作介绍 ===== -->
+<section class="section" id="intro">
+  <div class="section-header">
+    <p class="section-kicker">Work</p>
+    <h2 class="section-title">工作介绍</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="list-row">
+        <div class="list-icon blue">🕐</div>
+        <span class="list-label">上班时间</span>
+        <span class="list-value">8:30 – 18:00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-body">
+      <div class="list-row">
+        <div class="list-icon orange">📢</div>
+        <span class="list-label">早会</span>
+        <span class="list-value">每日 8:30</span>
+      </div>
+      <div class="list-row">
+        <div class="list-icon orange">🌙</div>
+        <span class="list-label">城市周会</span>
+        <span class="list-value">每周二晚上</span>
+      </div>
+      <div class="list-row">
+        <div class="list-icon orange">💬</div>
+        <span class="list-label">小组周会 / 晚分享</span>
+        <span class="list-value">每周一次</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-body">
+      <p style="font-size:13px;color:var(--secondary);margin-bottom:10px;">工作流程</p>
+      <div class="process-flow">
+        <span class="process-step">客户下单</span>
+        <span class="process-arrow">→</span>
+        <span class="process-step">联系客户</span>
+        <span class="process-arrow">→</span>
+        <span class="process-step">按时上门</span>
+        <span class="process-arrow">→</span>
+        <span class="process-step">机器质检</span>
+        <span class="process-arrow">→</span>
+        <span class="process-step">促成交</span>
+        <span class="process-arrow">→</span>
+        <span class="process-step">机器邮寄</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="info-icon green" style="background:rgba(52,199,89,0.1)">🎯</div>
+        <div class="info-body">
+          <p class="info-heading">工作性质</p>
+          <p class="info-desc">为国内城区个人用户提供高效便捷、确定性强、正规安全的<strong>上门回收+服务</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 培训安排 ===== -->
+<section class="section" id="arrange">
+  <div class="section-header">
+    <p class="section-kicker">Schedule</p>
+    <h2 class="section-title">培训安排</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="info-icon blue" style="background:rgba(0,122,255,0.1)">💻</div>
+        <div class="info-body">
+          <p class="info-heading">4 天线上培训</p>
+          <p class="info-desc">企业文化 · 质检标准 · 履约规范 · 规章制度</p>
+        </div>
+      </div>
+      <div class="chips">
+        <span class="chip">SKU识别</span>
+        <span class="chip">功能检测</span>
+        <span class="chip">显示检测</span>
+        <span class="chip">外观检测</span>
+        <span class="chip">拆修检测</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+        <div class="info-icon green" style="background:rgba(52,199,89,0.1)">🏃</div>
+        <div class="info-body">
+          <p class="info-heading">3 天实操 + 跑单</p>
+          <p class="info-desc">从师傅带教到独立上手</p>
+        </div>
+      </div>
+      <div class="list-row">
+        <span class="list-label">第 1 天</span>
+        <span class="list-value">师傅带教</span>
+      </div>
+      <div class="list-row">
+        <span class="list-label">第 2 天</span>
+        <span class="list-value">上手操作半天</span>
+      </div>
+      <div class="list-row">
+        <span class="list-label">第 3 天</span>
+        <span class="list-value">完整上手操作</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 准备工作 ===== -->
+<section class="section" id="prepare">
+  <div class="section-header">
+    <p class="section-kicker">Prepare</p>
+    <h2 class="section-title">准备工作</h2>
+  </div>
+
+  <!-- 上门超人 -->
+  <div class="card">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+        <div class="info-icon blue" style="background:rgba(0,122,255,0.1)">📱</div>
+        <div class="info-body">
+          <p class="info-heading">上门超人</p>
+          <p class="info-desc">日常工作使用（仅支持安卓）</p>
+        </div>
+      </div>
+      <a class="link-block" href="https://bvapk.zhuanzhuan.com/BVEnginerUpdoor.apk" target="_blank" rel="noopener">
+        下载链接 →
+      </a>
+    </div>
+  </div>
+
+  <!-- 验机精灵 -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+        <div class="info-icon green" style="background:rgba(52,199,89,0.1)">🔍</div>
+        <div class="info-body">
+          <p class="info-heading">验机精灵</p>
+          <p class="info-desc">辅助检测功能</p>
+        </div>
+      </div>
+      <div class="grid-2" style="gap:10px;">
+        <div style="background:rgba(0,122,255,0.04);border-radius:var(--radius-sm);padding:10px 14px;">
+          <p style="font-size:12px;color:var(--secondary);">安卓</p>
+          <p style="font-size:14px;font-weight:500;">扫码 / 链接下载</p>
+        </div>
+        <div style="background:rgba(0,122,255,0.04);border-radius:var(--radius-sm);padding:10px 14px;">
+          <p style="font-size:12px;color:var(--secondary);">苹果</p>
+          <p style="font-size:14px;font-weight:500;">应用商城下载</p>
+        </div>
+      </div>
+      <a class="link-block" style="margin-top:10px;" href="https://m.zhuanzhuan.com/zlj/qcapp_download/android.html" target="_blank" rel="noopener">
+        安卓下载链接 →
+      </a>
+    </div>
+  </div>
+
+  <!-- 外部工具 -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+        <div class="info-icon orange" style="background:rgba(255,149,0,0.1)">💬</div>
+        <div class="info-body">
+          <p class="info-heading">微信服务号</p>
+          <p class="info-desc">辅助查询工具</p>
+        </div>
+      </div>
+      <div class="chips">
+        <span class="chip" style="font-weight:600;">3023查询</span>
+        <span class="chip green">爱机</span>
+        <span class="chip green">比机</span>
+        <span class="chip green">爱查</span>
+        <span class="chip green">安果</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 验机工具 -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-body">
+      <p style="font-size:13px;color:var(--secondary);margin-bottom:14px;">验机工具清单</p>
+      <div class="grid-2">
+        <div>
+          <p style="font-size:12px;color:var(--secondary);margin-bottom:6px;">🏢 公司发放</p>
+          <ul style="list-style:none;font-size:14px;display:flex;flex-direction:column;gap:6px;">
+            <li>· 背包、工具包</li>
+            <li>· 拆机工具</li>
+            <li>· 无尘布、菲林卡、塞规</li>
+            <li>· 红白色卡</li>
+            <li>· 打标机打印纸</li>
+          </ul>
+        </div>
+        <div>
+          <p style="font-size:12px;color:var(--secondary);margin-bottom:6px;">🛒 自己购买</p>
+          <ul style="list-style:none;font-size:14px;display:flex;flex-direction:column;gap:6px;">
+            <li>· 手电筒、酒精</li>
+            <li>· 双头U盘</li>
+            <li>· 手机卡两张</li>
+            <li>· 充电宝 + 一拖三</li>
+            <li>· 遮阳雨伞</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 班级公约 ===== -->
+<section class="section" id="rules">
+  <div class="section-header">
+    <p class="section-kicker">Agreement</p>
+    <h2 class="section-title">班级公约</h2>
+  </div>
+
+  <!-- 课前 -->
+  <div class="card">
+    <div class="card-body">
+      <p style="font-size:12px;font-weight:600;color:var(--blue);letter-spacing:0.5px;margin-bottom:14px;">课 前</p>
+      <div class="list-row">
+        <span class="list-label">📝 课前准备</span>
+        <span class="list-value">笔、笔记本、腾讯会议、上门超人</span>
+      </div>
+      <div class="list-row">
+        <span class="list-label">👥 进群改名</span>
+        <span class="list-value">姓名 + 战区</span>
+      </div>
+      <div class="list-row">
+        <span class="list-label">💪 精神状态</span>
+        <span class="list-value">饱满参与</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 培训时间 -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-body">
+      <p style="font-size:12px;font-weight:600;color:var(--secondary);letter-spacing:0.5px;margin-bottom:12px;">培训时间</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="chip">📅 线上 4 天</span>
+        <span class="chip">☀️ 9:40 – 12:00</span>
+        <span class="chip">🌤 14:00 – 18:30</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 课中 -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-body">
+      <p style="font-size:12px;font-weight:600;color:var(--blue);letter-spacing:0.5px;margin-bottom:14px;">课 中</p>
+
+      <div style="background:rgba(52,199,89,0.05);border-radius:var(--radius);padding:16px;margin-bottom:12px;">
+        <p style="font-size:14px;font-weight:600;color:#248a3d;margin-bottom:8px;">✅ 三保持</p>
+        <ul style="list-style:none;font-size:14px;display:flex;flex-direction:column;gap:6px;">
+          <li>· 全程参与，积极配合培训工作</li>
+          <li>· 良好学习心态，投入越多收获越大</li>
+          <li>· 摄像头开启，未发言时关闭麦克风</li>
+          <li>· 认真听讲，做好笔记</li>
+        </ul>
+      </div>
+
+      <div style="background:rgba(255,59,48,0.05);border-radius:var(--radius);padding:16px 16px 12px;">
+        <p style="font-size:14px;font-weight:600;color:var(--red);margin-bottom:8px;">🚫 三不得</p>
+        <ul style="list-style:none;font-size:14px;display:flex;flex-direction:column;gap:6px;">
+          <li>· 不得迟到早退</li>
+          <li>· 不得挂机</li>
+          <li>· 不得频繁退出</li>
+        </ul>
+        <p style="font-size:12px;color:var(--red);margin-top:10px;font-weight:500;">
+          ⚠ 特殊情况提前报备 @开班培训师 + 城市经理
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 课后 -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-body">
+      <p style="font-size:12px;font-weight:600;color:var(--blue);letter-spacing:0.5px;margin-bottom:14px;">课 后</p>
+      <div class="list-row">
+        <span class="list-label">📝 每日反馈</span>
+        <span class="list-value">填写学习总结收集表</span>
+      </div>
+      <div class="list-row">
+        <span class="list-label">📖 学习考试</span>
+        <span class="list-value">完成学习地图章节</span>
+      </div>
+      <div class="list-row">
+        <span class="list-label">❓ 答疑咨询</span>
+        <span class="list-value">学习问题可随时咨询</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 学习地图 & 课后作业 ===== -->
+<section class="section">
+  <div class="section-header">
+    <p class="section-kicker">Assignments</p>
+    <h2 class="section-title">学习地图 & 课后作业</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <p style="font-size:13px;color:var(--secondary);margin-bottom:12px;">学习地图</p>
+      <div class="img-gallery">
+        <img src="images/image36.png" alt="学习地图" onerror="this.style.display='none'">
+        <img src="images/image37.png" alt="学习地图详情" onerror="this.style.display='none'">
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-body">
+      <p style="font-size:13px;color:var(--secondary);margin-bottom:12px;">课后作业</p>
+      <div class="img-gallery">
+        <img src="images/image40.png" alt="课后作业" onerror="this.style.display='none'">
+        <img src="images/image41.png" alt="课后作业详情" onerror="this.style.display='none'">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 加减分机制 ===== -->
+<section class="section" id="score">
+  <div class="section-header">
+    <p class="section-kicker">Score</p>
+    <h2 class="section-title">加减分机制</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <p style="font-size:14px;margin-bottom:16px;">初始分：<strong style="font-size:22px;">10 分</strong> / 人</p>
+
+      <p style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:8px;">减分项</p>
+      <div class="list-row">
+        <span class="list-label">迟到</span>
+        <span class="pill danger">-1 分</span>
+      </div>
+      <div class="list-row">
+        <span class="list-label">未参加（可提前请假）</span>
+        <span class="pill danger">-2 分</span>
+      </div>
+      <div class="list-row">
+        <span class="list-label">未交作业 / 笔记</span>
+        <span class="pill danger">-1 分</span>
+      </div>
+
+      <p style="font-size:12px;font-weight:600;color:#248a3d;margin:20px 0 8px;">加分项</p>
+      <div class="list-row">
+        <span class="list-label">日常回答问题</span>
+        <span class="pill success">+1 分</span>
+      </div>
+      <div class="list-row">
+        <span class="list-label">游戏环节成功</span>
+        <span class="pill success">+1 分</span>
+      </div>
+      <div class="list-row">
+        <span class="list-label">笔记分享优秀前 3 名</span>
+        <span class="pill success">各 +1 分</span>
+      </div>
+
+      <div class="callout">
+        <strong>⚠ 注意：</strong>挂机超过 2 次需重新参加；请假/未参加不要超过 1 天（超过需重新参加）。未参加 = 点名没反应；挂机 = 签到完成但多次点名没反应。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<section class="footer">
+  <p class="ending">感 谢 观 看</p>
+  <p class="slogan">Save the money. Save the world.</p>
+  <p class="copy">© 转转循环科技有限公司</p>
+</section>
+
+</main>
+
+<script>
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+
+</body>
+</html>
