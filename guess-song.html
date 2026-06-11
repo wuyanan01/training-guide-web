@@ -565,77 +565,79 @@ function showScreen(screen) {
   screen.classList.add('active');
 }
 
-// ==================== FETCH SONGS ====================
+// ==================== FETCH SONGS FROM ITUNES API ====================
+const SEARCH_TERMS = [
+  '周杰伦', '林俊杰', '邓紫棋', '陈奕迅', '薛之谦', '李荣浩',
+  '田馥甄', '孙燕姿', '梁静茹', '五月天', '张韶涵', '王力宏',
+  '蔡依林', '刘若英', '周深', '朴树', '赵雷', '胡夏',
+  '华晨宇', '张杰', '光良', '买辣椒也用券', '岑宁儿', '逃跑计划',
+  '于文文', '马頔'
+];
+
 async function fetchSongs() {
-  const fallbackSongs = [
-    // Pre-curated Chinese hits with iTunes preview URLs
-    { name:'七里香', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/8e/3c/fb/8e3cfb9a-5b5c-2a7a-f1e8-6902a3425d3e/mzaf_4620256826872841725.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/f8/24/43/f82443f1-af93-4c5f-d594-89f548a1f1f3/source/100x100bb.jpg' },
-    { name:'稻香', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/7c/fc/e6/7cfce663-a12e-7b39-7bc2-13239ee25e1f/mzaf_16905573447504436013.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/47/cf/33/47cf33cf-7546-73f5-0efc-3c9e5d4d3cef/source/100x100bb.jpg' },
-    { name:'青花瓷', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/2e/d6/3d/2ed63d09-5c8a-0fa3-0c3c-bd0bf8a64325/mzaf_7648384903499850808.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/82/49/b5/8249b53a-e64b-a5f5-8fe9-740a8e95a2bd/source/100x100bb.jpg' },
-    { name:'晴天', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/2e/d6/3d/2ed63d09-5c8a-0fa3-0c3c-bd0bf8a64325/mzaf_7648384903499850808.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/82/49/b5/8249b53a-e64b-a5f5-8fe9-740a8e95a2bd/source/100x100bb.jpg' },
-    { name:'夜曲', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/c2/7b/4c/c27b4c09-b4a3-4d17-29dd-7d5e16d8e7c1/mzaf_15672764931698911419.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/f8/24/43/f82443f1-af93-4c5f-d594-89f548a1f1f3/source/100x100bb.jpg' },
-    { name:'简单爱', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/9b/3f/29/9b3f29cd-8d37-8c3b-7b4a-36e93c8c1a47/mzaf_17769131986044660665.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/4e/d5/19/4ed5198e-a9e3-6ce4-99ce-98acb5c8c7c1/source/100x100bb.jpg' },
-    { name:'修炼爱情', artist:'林俊杰', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/e0/b3/51/e0b35105-a7b3-8aed-2c85-b4c5719a2fba/mzaf_15825815143075323779.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/1d/a1/c2/1da1c2d4-e7c8-2f7b-1ee3-1c07d5a1c6c0/source/100x100bb.jpg' },
-    { name:'一千年以后', artist:'林俊杰', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/01/0e/9e/010e9e77-5924-5c4a-cce0-b7880d9a0fb0/mzaf_14707075346782830149.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/c4/23/c6/c423c6b8-6c0c-4ab3-bc4e-e5bf4cb4f5da/source/100x100bb.jpg' },
-    { name:'泡沫', artist:'邓紫棋', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/e8/1f/2a/e81f2a2b-7aeb-3a21-f2e3-8ebc7e4f1eb2/mzaf_891252381357182936.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/b7/ed/a0/b7eda0ec-bd45-1b0e-0d18-6f77e0cd0d20/source/100x100bb.jpg' },
-    { name:'光年之外', artist:'邓紫棋', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/93/c6/ad/93c6adc4-66a8-c5b7-3e3b-4a529bd7e31e/mzaf_1685300306384595239.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/0f/c5/9a/0fc59a7c-6ffe-583f-7b1c-7e7d22f3a5c5/source/100x100bb.jpg' },
-    { name:'十年', artist:'陈奕迅', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/99/6c/5a/996c5a97-4c95-26b5-5d9f-3d6b0a5a5b7e/mzaf_5962631720154698056.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/1a/67/60/1a676093-f481-8abf-bbfa-ccadfa8488b7/source/100x100bb.jpg' },
-    { name:'爱情转移', artist:'陈奕迅', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/a9/0c/98/a90c98b2-5a59-7259-37ad-4c6d13c76d1b/mzaf_1008954678218730816.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/53/5d/b9/535db9e8-74b2-7a4c-87e3-767b5888af62/source/100x100bb.jpg' },
-    { name:'演员', artist:'薛之谦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/7b/c7/c3/7bc7c3d9-2cb4-791e-2a9b-4d62b2b5a2e6/mzaf_7653111633331717758.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/11/ef/5c/11ef5c91-1670-fb15-3aa8-6eef109a7a2c/source/100x100bb.jpg' },
-    { name:'起风了', artist:'买辣椒也用券', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/13/5e/1f/135e1fc9-3540-5e4f-4ae8-6aa60d4c4a86/mzaf_7383496347086444175.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/52/aa/25/52aa252d-62b2-d773-7da7-4c1d9eb2c34e/source/100x100bb.jpg' },
-    { name:'小幸运', artist:'田馥甄', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/43/b6/0c/43b60c2e-6ff9-a6f9-fbe6-271e1c13e6e3/mzaf_5357206725616999517.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/9f/1e/ee/9f1eeeaf-acae-7bd4-e0c8-1891926e39c3/source/100x100bb.jpg' },
-    { name:'后来', artist:'刘若英', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/27/52/e6/2752e6f6-03af-2a6c-f9a0-9234e0e47ef0/mzaf_2857737809925687451.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/1e/88/9e/1e889ea7-3eeb-ef9f-0efb-7fc955a1d889/source/100x100bb.jpg' },
-    { name:'追光者', artist:'岑宁儿', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/c6/2c/31/c62c312a-b8e6-8f69-3e02-4a82e0de2b8a/mzaf_3550528598502924437.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/0e/a9/21/0ea9214a-ce44-33ce-2a84-3b75ae9c8b38/source/100x100bb.jpg' },
-    { name:'平凡之路', artist:'朴树', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/01/90/3c/01903cfb-2c9e-8f40-e436-4c85985d895e/mzaf_8778453630123998591.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/b1/12/1a/b1121aac-ea2b-40b2-2c98-b28b3c9e4c9c/source/100x100bb.jpg' },
-    { name:'告白气球', artist:'周杰伦', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/82/0e/3b/820e3b48-d2f4-0d6f-b4a5-5c7f1d3d3c7e/mzaf_6887018120400535171.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/fe/5d/af/fe5dafe8-e9f2-52b6-71ff-b3bcce52ed50/source/100x100bb.jpg' },
-    { name:'那些年', artist:'胡夏', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/83/e6/bb/83e6bb9a-e6ac-26d0-ea85-7cd24cbb3eff/mzaf_6572017955668975939.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/6f/34/09/6f3409f0-22a8-03a1-2a8e-c7f7a7b7a3c4/source/100x100bb.jpg' },
-    { name:'大鱼', artist:'周深', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/b9/91/a0/b991a0d6-0cfa-0b50-a477-87b0a6c3c2ad/mzaf_8710827884957395734.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/3e/39/b5/3e39b512-79a1-9d97-608e-62dcaa926e07/source/100x100bb.jpg' },
-    { name:'年少有为', artist:'李荣浩', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/22/06/5c/22065c56-5c36-10fc-12e2-6b40580f0b09/mzaf_2467244291209431300.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/6d/7c/6f/6d7c6f9e-d7e2-2ae0-10f2-42f1e0c3a382/source/100x100bb.jpg' },
-    { name:'体面', artist:'于文文', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/21/8f/3f/218f3f59-4b89-5312-562e-90a52c8a69ad/mzaf_2947160627067092756.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/a4/e7/01/a4e701ab-e351-9c38-9c44-13a7ad35e275/source/100x100bb.jpg' },
-    { name:'南山南', artist:'马頔', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/78/7a/5e/787a5e44-d3f6-59b6-23f8-37c501abe9b4/mzaf_2586724670445616364.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/a3/73/c7/a373c729-ffc9-8f21-8a24-f0ccf0d74a73/source/100x100bb.jpg' },
-    { name:'遇见', artist:'孙燕姿', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/1c/f9/aa/1cf9aa4c-1f4a-0e98-10bd-501a13e226a7/mzaf_5476605677734144679.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/33/1f/2b/331f2b35-26eb-a212-ced5-5545af414799/source/100x100bb.jpg' },
-    { name:'勇气', artist:'梁静茹', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/88/06/3c/88063c2d-ba81-1e7f-02e7-06d0e8c8c2d9/mzaf_16888069751689740502.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/5d/f9/f0/5df9f0ea-e00a-40be-ff0c-35aba9e5c1a5/source/100x100bb.jpg' },
-    { name:'隐形的翅膀', artist:'张韶涵', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/9c/d5/88/9cd58811-d15a-2c1e-96e7-6c30ef7e9071/mzaf_18376300570381056938.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/43/7f/7a/437f7a9f-db15-56e3-04c4-57a16e1dee87/source/100x100bb.jpg' },
-    { name:'成都', artist:'赵雷', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/9f/80/3e/9f803e4b-478a-2aa7-0f89-1f4e275a0c27/mzaf_15965131851015758916.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/cd/8a/50/cd8a50a7-d834-7e3a-8cb6-9c8e0a6f3e8a/source/100x100bb.jpg' },
-    { name:'童话', artist:'光良', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/79/45/4e/79454eab-18e3-5fba-c052-a52e19d7c1d4/mzaf_5759691780705636519.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/2a/20/4e/2a204eef-60ce-2a88-7a4e-bcd9c007cbc5/source/100x100bb.jpg' },
-    { name:'最美的期待', artist:'周笔畅', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/f0/2d/92/f02d92b6-5360-7116-6cb6-ff38fef73a0a/mzaf_17154821643892203115.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/a1/f0/8d/a1f08d85-74a8-244e-4e80-1f0dd9ab8e63/source/100x100bb.jpg' },
-    { name:'夜空中最亮的星', artist:'逃跑计划', preview:'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/13/44/e0/1344e084-4ce8-c29a-66a0-e10bca3c1a8b/mzaf_6905102348113689452.plus.aac.p.m4a', art:'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/c3/9e/72/c39e7204-dfef-2b97-8a0f-8c5a017bd128/source/100x100bb.jpg' },
-  ];
+  // Shuffle and pick a few search terms to get variety each game
+  const terms = shuffle(SEARCH_TERMS).slice(0, 8);
+  let allResults = [];
 
-  // Try to fetch additional songs from iTunes API
-  const artists = ['周杰伦','林俊杰','邓紫棋','陈奕迅','薛之谦','李荣浩'];
-  const artist = artists[Math.floor(Math.random() * artists.length)];
+  $('loadingText').textContent = '正在从 iTunes 加载歌曲...';
 
-  try {
-    const resp = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&limit=15&media=music&country=cn`);
-    const data = await resp.json();
-    if (data.results && data.results.length > 0) {
-      const apiSongs = data.results
-        .filter(r => r.previewUrl && r.trackName && r.artistName)
-        .map(r => ({
-          name: r.trackName,
-          artist: r.artistName,
-          preview: r.previewUrl,
-          art: r.artworkUrl100 || ''
-        }));
-      songs = [...fallbackSongs, ...apiSongs];
-    } else {
-      songs = fallbackSongs;
+  for (let i = 0; i < terms.length; i++) {
+    try {
+      $('loadingText').textContent = `正在加载歌曲 (${i + 1}/${terms.length})...`;
+      const resp = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(terms[i])}&limit=10&media=music&country=cn`
+      );
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      if (data.results) {
+        const valid = data.results
+          .filter(r => r.previewUrl && r.trackName && r.artistName && r.trackName.length > 1)
+          .map(r => ({
+            name: r.trackName,
+            artist: r.artistName,
+            preview: r.previewUrl,
+            art: r.artworkUrl100 ? r.artworkUrl100.replace('100x100', '300x300') : ''
+          }));
+        allResults = allResults.concat(valid);
+      }
+    } catch (e) {
+      console.warn(`Search failed for ${terms[i]}:`, e.message);
     }
-  } catch (e) {
-    console.log('iTunes API failed, using fallback songs');
-    songs = fallbackSongs;
   }
 
-  // Deduplicate by name
+  if (allResults.length < 4) {
+    // Final fallback - try a broader search
+    try {
+      const resp = await fetch('https://itunes.apple.com/search?term=pop+chinese&limit=25&media=music&country=cn');
+      const data = await resp.json();
+      if (data.results) {
+        const valid = data.results
+          .filter(r => r.previewUrl && r.trackName)
+          .map(r => ({
+            name: r.trackName,
+            artist: r.artistName || '未知歌手',
+            preview: r.previewUrl,
+            art: r.artworkUrl100 ? r.artworkUrl100.replace('100x100', '300x300') : ''
+          }));
+        allResults = allResults.concat(valid);
+      }
+    } catch (e) {}
+  }
+
+  if (allResults.length < 4) {
+    throw new Error('歌曲加载失败，请检查网络连接后刷新页面重试');
+  }
+
+  // Deduplicate
   const seen = new Set();
-  songs = songs.filter(s => {
-    const key = s.name + s.artist;
+  songs = allResults.filter(s => {
+    const key = s.name + '|' + s.artist;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
 
+  $('loadingText').textContent = `已加载 ${songs.length} 首歌曲`;
   return songs;
 }
 
@@ -680,12 +682,19 @@ async function startGame() {
   stopAudio();
   showScreen(loadingScreen);
 
-  if (songs.length < 4) {
-    await fetchSongs();
+  try {
+    if (songs.length < 4) {
+      await fetchSongs();
+    }
+  } catch (e) {
+    showToast('歌曲加载失败，请检查网络后刷新重试');
+    showScreen(startScreen);
+    console.error(e);
+    return;
   }
 
   if (songs.length < 4) {
-    showToast('歌曲加载失败，请刷新重试');
+    showToast('歌曲不足，请检查网络后刷新重试');
     showScreen(startScreen);
     return;
   }
@@ -805,10 +814,33 @@ function togglePlay() {
 
   // Start playing
   audio = new Audio(currentSong.preview);
-  audio.currentTime = Math.random() * 15; // random start point within 30s preview
-  audio.play().catch(e => {
-    showToast('播放失败，请重试');
-    console.error(e);
+  audio.preload = 'auto';
+  const startPos = Math.random() * 15; // random start point within 30s preview
+  audio.currentTime = startPos;
+
+  // Handle load errors
+  audio.onerror = () => {
+    stopAudio();
+    showToast('音频加载失败，请重试或跳过此题');
+    $('btnPlay').textContent = '▶';
+    $('btnPlay').classList.remove('playing');
+    $('playerCard').classList.remove('playing');
+    $('albumArt').classList.remove('playing');
+    updateEq($('equalizer').querySelectorAll('.eq-bar'));
+  };
+
+  audio.play().then(() => {
+    // playback started successfully
+  }).catch(e => {
+    stopAudio();
+    showToast('播放被阻止，请点击播放按钮后再试');
+    $('btnPlay').textContent = '▶';
+    $('btnPlay').classList.remove('playing');
+    $('playerCard').classList.remove('playing');
+    $('albumArt').classList.remove('playing');
+    updateEq($('equalizer').querySelectorAll('.eq-bar'));
+    console.error('Audio play failed:', e.message);
+    return;
   });
 
   isPlaying = true;
